@@ -1,554 +1,221 @@
-<!DOCTYPE html>
-<html id="htmlTag" lang="fa" dir="rtl">
+l<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جعبه ابزار دوطرفه ساب‌اسکریپشن | Pro Sub Hub</title>
-    <!-- Tailwind CSS v4 -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- فونت وزیر برای زبان فارسی -->
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <!-- کتابخانه تولید QR Code -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- آیکون‌های Lucide -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <style>
-        body {
-            font-family: Vazirmatn, system-ui, -apple-system, sans-serif;
-            background: radial-gradient(circle at top, #0f172a, #020617);
-        }
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .glow-effect {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
-            top: -10%;
-            left: -10%;
-            z-index: -1;
-            pointer-events: none;
-        }
-        @media (min-width: 768px) {
-            .glow-effect { width: 500px; height: 500px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<title>SUB Config Decoder — GOD MODE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root{
+--bg:#0b1020;--card:#151c2f;--accent:#5c7cff;--text:#e6eef8;
+--muted:#94a3b8;--border:1px solid rgba(255,255,255,.08)
+}
+[data-theme="light"]{
+--bg:#f8fafc;--card:#fff;--accent:#4f46e5;--text:#1e293b;
+--muted:#64748b;--border:1px solid rgba(0,0,0,.08)
+}
+*{box-sizing:border-box;font-family:Inter,Segoe UI}
+body{margin:0;background:var(--bg);color:var(--text);padding:16px}
+.container{max-width:1100px;margin:auto;display:grid;grid-template-columns:1fr 360px;gap:16px}
+.card{background:var(--card);border-radius:16px;padding:16px;border:var(--border)}
+textarea,input,button{
+background:#00000030;color:var(--text);border-radius:10px;
+border:var(--border);padding:12px
+}
+textarea{width:100%;height:380px;font-family:monospace}
+button{cursor:pointer;background:var(--accent);border:none;font-weight:600}
+button.ghost{background:transparent;border:var(--border)}
+.tabs button{flex:1}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.small{font-size:13px;color:var(--muted)}
+.counter span{margin-right:10px}
+.history div{cursor:pointer;padding:6px;border-radius:6px}
+.history div:hover{background:#ffffff10}
+@media(max-width:900px){
+.container{grid-template-columns:1fr}
+}
+</style>
 </head>
-<body class="text-slate-200 min-h-screen flex flex-col items-center justify-between p-3 md:p-8 antialiased relative overflow-x-hidden">
-    
-    <div class="glow-effect"></div>
-    <div class="glow-effect" style="right:-10%; bottom:-10%; left:auto; top:auto; background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);"></div>
 
-    <!-- سیستم اعلان‌ها (Toast Container) -->
-    <div id="toastContainer" class="fixed top-5 left-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+<body>
+<div class="container">
 
-    <!-- کانتینر اصلی کاملاً ریسپانسیو برای موبایل و دسکتاپ -->
-    <div class="w-full max-w-3xl glass-panel rounded-3xl p-4 md:p-8 shadow-2xl shadow-black/80 my-auto">
-        
-        <!-- هدر اصلی و منوی تنظیمات -->
-        <div class="flex flex-col gap-4 border-b border-slate-800/80 pb-5 mb-6">
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                <div>
-                    <h1 id="txt-title" class="text-xl md:text-2xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
-                        <i data-lucide="refresh-cw" class="text-indigo-400 w-6 h-6 md:w-7 md:h-7"></i>
-                        جعبه ابزار دوطرفه ساب‌اسکریپشن
-                    </h1>
-                    <p id="txt-subtitle" class="text-slate-400 text-xs mt-1">تبدیل کانفیگ به ساب و استخراج معکوس کانفیگ از لینک ساب</p>
-                </div>
-                
-                <!-- بخش تغییر زبان و دکمه کانال -->
-                <div class="flex items-center justify-between sm:justify-end gap-3">
-                    <!-- سوییچ زبان -->
-                    <div class="bg-slate-950/60 p-1 rounded-xl border border-slate-800/60 flex gap-1 text-xs font-bold">
-                        <button onclick="changeLanguage('fa')" id="lang-fa" class="px-2.5 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 cursor-pointer">FA</button>
-                        <button onclick="changeLanguage('en')" id="lang-en" class="px-2.5 py-1.5 rounded-lg text-slate-400 cursor-pointer">EN</button>
-                    </div>
-                    
-                    <a href="https://t.me/xsfilterrnet" target="_blank" class="flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white text-xs font-bold py-2 px-3.5 rounded-xl shadow-lg shadow-sky-500/10 transition-all transform hover:-translate-y-0.5">
-                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                        <span id="txt-telegram">کانال تلگرام</span>
-                    </a>
-                </div>
-            </div>
-        </div>
+<!-- LEFT -->
+<div class="card">
+<h2>🚀 SUB Config Decoder — God Mode</h2>
+<p class="small">Paste subscription URL / config / Base64</p>
 
-        <!-- سوییچ‌کننده تب‌ها -->
-        <div class="grid grid-cols-2 gap-2 bg-slate-950/60 p-1.5 rounded-2xl border border-slate-800/60 mb-6 text-xs md:text-sm">
-            <button id="tabToSubBtn" onclick="switchTab('toSub')" class="bg-indigo-600/10 border border-indigo-500/40 text-white py-3 font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5">
-                <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
-                <span id="tab-to-sub-text">کانفیگ ➔ لینک ساب</span>
-            </button>
-            <button id="tabToConfigBtn" onclick="switchTab('toConfig')" class="py-3 font-bold rounded-xl border border-transparent text-slate-400 hover:text-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5">
-                <i data-lucide="arrow-down-left" class="w-4 h-4"></i>
-                <span id="tab-to-config-text">لینک ساب ➔ کانفیگ</span>
-            </button>
-        </div>
+<div class="row">
+<input id="sub" placeholder="https://example.com/sub.txt or vmess://..." style="flex:1">
+<button onclick="generate()">Generate</button>
+</div>
 
-        <!-- ================= بخش اول: تبدیل کانفیگ به ساب ================= -->
-        <div id="sectionToSub" class="space-y-5">
-            <div>
-                <label id="lbl-input-configs" class="block text-xs font-semibold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
-                    <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
-                    کانفیگ‌های ورودی (Vless, Vmess, Trojan, SS):
-                </label>
-                <textarea id="configsInput" rows="6" oninput="analyzeConfigs()"
-                    class="w-full bg-slate-950/40 border border-slate-800 rounded-2xl p-4 font-mono text-xs md:text-sm text-indigo-200 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:font-sans text-left"
-                    placeholder="vless://...&#10;vmess://..."></textarea>
-            </div>
+<div class="row" style="margin-top:8px">
+<button class="ghost" onclick="copyAll()">📋 Copy</button>
+<button class="ghost" onclick="downloadTXT()">💾 TXT</button>
+<button class="ghost" onclick="downloadJSON()">📦 JSON</button>
+<button class="ghost" onclick="downloadClash()">🧩 Clash</button>
+<button class="ghost" onclick="clearAll()">🗑️ Clear</button>
+</div>
 
-            <!-- پنل آمار زنده -->
-            <div class="grid grid-cols-5 gap-1.5 bg-slate-950/30 p-2 rounded-xl border border-slate-800/40 text-center text-[10px] md:text-xs">
-                <div><p id="stat-all" class="text-slate-500">کل</p><p id="count-all" class="font-bold text-white text-sm">0</p></div>
-                <div><p class="text-indigo-400">Vless</p><p id="count-vless" class="font-bold text-sm">0</p></div>
-                <div><p class="text-purple-400">Vmess</p><p id="count-vmess" class="font-bold text-sm">0</p></div>
-                <div><p class="text-amber-400">Trojan</p><p id="count-trojan" class="font-bold text-sm">0</p></div>
-                <div><p class="text-sky-400">SS</p><p id="count-ss" class="font-bold text-sm">0</p></div>
-            </div>
+<div class="row tabs" style="margin-top:12px">
+<button onclick="setTab('all')">All</button>
+<button onclick="setTab('vmess')">VMESS</button>
+<button onclick="setTab('vless')">VLESS</button>
+<button onclick="setTab('trojan')">Trojan</button>
+<button onclick="setTab('ss')">SS</button>
+</div>
 
-            <button onclick="generateSubscription()" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer text-sm md:text-base">
-                <i data-lucide="wand2" class="w-4 h-4 md:w-5 md:h-5"></i> 
-                <span id="btn-generate">ساخت لینک‌های ساب‌اسکریپشن</span>
-            </button>
+<input id="search" placeholder="🔍 Live search..." style="margin-top:10px;width:100%">
 
-            <!-- خروجی‌های بخش اول -->
-            <div id="outputToSub" class="hidden space-y-4 pt-4 border-t border-slate-800/80">
-                <!-- لینک جنرال دیتا -->
-                <div class="bg-slate-950/30 p-3.5 rounded-xl border border-slate-800/50">
-                    <label id="lbl-output-dataurl" class="block text-xs font-bold text-emerald-400 mb-1.5">لینک مستقیم کلینت‌ها (Data URL):</label>
-                    <div class="relative flex items-center">
-                        <input id="subLinkOutput" type="text" readonly class="w-full bg-slate-950/80 border border-slate-700 rounded-lg py-2.5 pr-3 pl-16 text-left font-mono text-xs text-emerald-400 focus:outline-none">
-                        <button onclick="copyToClipboard('subLinkOutput', this)" class="absolute left-1.5 bg-emerald-600 hover:bg-emerald-700 text-[10px] md:text-xs px-2.5 py-1.5 rounded-md text-white font-medium transition-colors cursor-pointer btn-copy-txt">کپی</button>
-                    </div>
-                </div>
+<textarea id="output" readonly></textarea>
 
-                <!-- لینک‌های اختصاصی اپلیکیشن‌ها -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div class="bg-slate-950/30 p-3 rounded-xl border border-slate-800/40 flex flex-col justify-between gap-2.5">
-                        <span class="text-xs font-bold text-orange-400 flex items-center gap-1"><i data-lucide="smartphone" class="w-3.5 h-3.5"></i> v2rayNG / v2rayN</span>
-                        <button onclick="openApp('v2rayng')" class="text-center bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-300 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer btn-import-txt">افزودن مستقیم</button>
-                    </div>
-                    <div class="bg-slate-950/30 p-3 rounded-xl border border-slate-800/40 flex flex-col justify-between gap-2.5">
-                        <span class="text-xs font-bold text-teal-400 flex items-center gap-1"><i data-lucide="shield" class="w-3.5 h-3.5"></i> Hiddify Next</span>
-                        <button onclick="openApp('hiddify')" class="text-center bg-teal-600/20 hover:bg-teal-600/30 border border-teal-500/30 text-teal-300 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer btn-import-txt">افزودن مستقیم</button>
-                    </div>
-                    <div class="bg-slate-950/30 p-3 rounded-xl border border-slate-800/40 flex flex-col justify-between gap-2.5">
-                        <span class="text-xs font-bold text-pink-400 flex items-center gap-1"><i data-lucide="zap" class="w-3.5 h-3.5"></i> HA Tunnel / HaPP</span>
-                        <button onclick="openApp('happ')" class="text-center bg-pink-600/20 hover:bg-pink-600/30 border border-pink-500/30 text-pink-300 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer btn-import-txt">افزودن مستقیم</button>
-                    </div>
-                </div>
+<div class="row counter small">
+<span id="cnt"></span>
+</div>
+</div>
 
-                <!-- بخش QR Code -->
-                <div class="flex flex-col sm:flex-row items-center gap-4 bg-slate-950/50 p-4 rounded-xl border border-slate-800/60">
-                    <div id="qrcode" class="p-2 bg-white rounded-lg shrink-0"></div>
-                    <div class="text-center ltr:sm:text-left rtl:sm:text-right">
-                        <h4 id="lbl-qr-title" class="text-xs font-bold text-slate-200 mb-1 flex items-center gap-1 justify-center sm:justify-start"><i data-lucide="qr-code" class="w-4 h-4 text-purple-400"></i> اسکن هوشمند بارکد ساب</h4>
-                        <p id="lbl-qr-desc" class="text-[11px] text-slate-400 leading-relaxed">بارکد بالا حاوی لینک مستقیم دیتای ساب‌اسکریپشن است. می‌توانید مستقیماً آن را با دوربین نرم‌افزارهای کلاینت اسکن کنید تا کل کانفیگ‌ها یکجا ایمپورت شوند.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- RIGHT -->
+<div class="card">
+<div class="row">
+<strong>⚙ Utilities</strong>
+<button class="ghost" onclick="toggleTheme()">🌙 / ☀️</button>
+</div>
 
-        <!-- ================= بخش دوم: تبدیل ساب به کانفیگ (معکوس) ================= -->
-        <div id="sectionToConfig" class="space-y-5 hidden">
-            <div>
-                <label id="lbl-input-sub" class="block text-xs font-semibold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
-                    <i data-lucide="link-2" class="w-4 h-4 text-slate-400"></i>
-                    لینک ساب (مرزبان، سنایی، X-ui و...) یا دیتای بیس۶۴ را وارد کنید:
-                </label>
-                <textarea id="subInput" rows="4" 
-                    class="w-full bg-slate-950/40 border border-slate-800 rounded-2xl p-4 text-left font-mono text-xs text-purple-200 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all placeholder:font-sans"
-                    placeholder="http://example.com/sub/... یا دیتای Base64"></textarea>
-            </div>
+<h4>🕘 History</h4>
+<div class="history small" id="history"></div>
 
-            <button id="btn-decode-trigger" onclick="decodeSubscription()" class="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-3 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer text-sm md:text-base">
-                <i id="btn-decode-icon" data-lucide="unlock" class="w-4 h-4 md:w-5 md:h-5"></i> 
-                <span id="btn-decode">استخراج و رمزگشایی کانفیگ‌ها</span>
-            </button>
+<h4>ℹ Info</h4>
+<ul class="small">
+<li>Auto Decode Base64</li>
+<li>VMESS → JSON</li>
+<li>Live Filter</li>
+<li>LocalStorage History</li>
+</ul>
+</div>
 
-            <!-- خروجی معکوس -->
-            <div id="outputToConfig" class="hidden space-y-3 pt-4 border-t border-slate-800/80">
-                <div class="flex justify-between items-center px-1">
-                    <span id="lbl-output-configs" class="text-xs font-bold text-purple-400 flex items-center gap-1"><i data-lucide="layers" class="w-3.5 h-3.5"></i> کانفیگ‌های استخراج شده:</span>
-                    <button onclick="copyToClipboard('decodedConfigsOutput', this)" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-slate-200 flex items-center gap-1 transition-all cursor-pointer btn-copy-all-txt">
-                        کپی همه کانفیگ‌ها
-                    </button>
-                </div>
-                <textarea id="decodedConfigsOutput" rows="7" readonly class="w-full bg-slate-950/80 border border-slate-700 rounded-2xl p-4 text-left font-mono text-xs text-slate-300 focus:outline-none"></textarea>
-            </div>
-        </div>
+</div>
 
-        <!-- فوتر طراح و سازنده -->
-        <div class="text-center text-xs text-slate-500 mt-8 pt-5 border-t border-slate-800/50 space-y-1.5">
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
-                <div><span id="txt-footer-dev">طراح و توسعه‌دهنده:</span> <strong class="text-indigo-400 font-mono">xsparvin</strong></div>
-                <span class="text-slate-700 hidden sm:inline">|</span>
-                <a href="https://t.me/xsfilterrnet" target="_blank" class="text-purple-400 hover:text-purple-300 font-bold transition-colors">xsfilterrnet@</a>
-            </div>
-            <p id="txt-footer-safety" class="text-[10px] text-slate-600">امنیت تضمین شده؛ تمامی پردازش‌ها در مرورگر اختصاصی شما و بدون واسطه سرور انجام می‌پذیرد.</p>
-        </div>
-    </div>
+<script>
+const out=document.getElementById("output");
+const sub=document.getElementById("sub");
+let allLines=[],currentTab="all";
 
-    <script>
-        const langData = {
-            fa: {
-                dir: "rtl",
-                title: "جعبه ابزار دوطرفه ساب‌اسکریپشن",
-                subtitle: "تبدیل کانفیگ به ساب و استخراج معکوس کانفیگ از لینک ساب",
-                telegram: "کانال تلگرام",
-                tabToSub: "کانفیگ ➔ لینک ساب",
-                tabToConfig: "لینک ساب ➔ کانفیگ",
-                lblInputConfigs: "کانفیگ‌های ورودی (Vless, Vmess, Trojan, SS):",
-                statAll: "کل",
-                btnGenerate: "ساخت لینک‌های ساب‌اسکریپشن",
-                lblOutputDataurl: "لینک مستقیم کلینت‌ها (Data URL):",
-                btnCopy: "کپی",
-                btnImport: "افزودن مستقیم",
-                lblQrTitle: "اسکن هوشمند بارکد ساب",
-                lblQrDesc: "بارکد بالا حاوی لینک مستقیم دیتای ساب‌اسکریپشن است. می‌توانید مستقیماً آن را با دوربین نرم‌افزارهای کلاینت اسکن کنید تا کل کانفیگ‌ها یکجا ایمپورت شوند.",
-                lblInputSub: "لینک ساب (مرزبان، سنایی، X-ui و...) یا دیتای بیس۶۴ را وارد کنید:",
-                btnDecode: "استخراج و رمزگشایی کانفیگ‌ها",
-                lblOutputConfigs: "کانفیگ‌های استخراج شده:",
-                btnCopyAll: "کپی همه کانفیگ‌ها",
-                footerDev: "طراح و توسعه‌دهنده:",
-                footerSafety: "امنیت تضمین شده؛ تمامی پردازش‌ها در مرورگر اختصاصی شما و بدون واسطه سرور انجام می‌پذیرد.",
-                msgEmptyConfig: "لطفاً ابتدا چند خط کانفیگ وارد کنید!",
-                msgSuccessGen: "لینک‌های ساب با موفقیت ساخته شدند.",
-                msgEmptySub: "لطفاً لینک ساب یا دیتای بیس۶۴ را وارد کنید!",
-                msgSuccessDec: "کانفیگ‌ها با موفقیت استخراج و بازنویسی شدند.",
-                msgErrorDec: "ساختار رشته وارد شده معتبر نیست یا بیس۶۴ خراب است!",
-                msgCopied: "در کلیپ‌بورد کپی شد!",
-                msgLoading: "در حال دریافت دیتا از لینک ساب..."
-            },
-            en: {
-                dir: "ltr",
-                title: "Two-Way Subscription Tool",
-                subtitle: "Convert Configs to Sub Link & Extract Configs Back",
-                telegram: "Telegram Channel",
-                tabToSub: "Config ➔ Sub Link",
-                tabToConfig: "Sub Link ➔ Config",
-                lblInputConfigs: "Input Configs (Vless, Vmess, Trojan, SS):",
-                statAll: "Total",
-                btnGenerate: "Generate Subscription Links",
-                lblOutputDataurl: "Direct Clients Sub Link (Data URL):",
-                btnCopy: "Copy",
-                btnImport: "Direct Import",
-                lblQrTitle: "Smart Sub QR Code",
-                lblQrDesc: "This QR code contains the direct sub data URL. Scan it via your client app camera to import all configs instantly.",
-                lblInputSub: "Enter Sub Link (Marzban, Sanaei, etc.) or Base64 Raw Data:",
-                btnDecode: "Extract & Decode Configs",
-                lblOutputConfigs: "Extracted Configs:",
-                btnCopyAll: "Copy All Configs",
-                footerDev: "Developer:",
-                footerSafety: "100% Secure. All processing happens locally inside your browser.",
-                msgEmptyConfig: "Please enter some configs first!",
-                msgSuccessGen: "Subscription links generated successfully.",
-                msgEmptySub: "Please enter a sub link or base64 data!",
-                msgSuccessDec: "Configs extracted and decoded successfully.",
-                msgErrorDec: "Invalid sub link structure or corrupted Base64!",
-                msgCopied: "Copied to clipboard!",
-                msgLoading: "Fetching data from sub link..."
-            }
-        };
+/* ---------- Base64 ---------- */
+const isB64=s=>{try{return btoa(atob(s.replace(/\s+/g,'')))===s.replace(/\s+/g,'')}catch{return false}}
+const dec=s=>{try{return atob(s)}catch{return null}}
 
-        let currentLang = 'fa';
-        lucide.createIcons();
+/* ---------- VMESS ---------- */
+function decodeVmess(l){
+try{
+let j=JSON.parse(atob(l.replace("vmess://","")));
+return j
+}catch{return null}
+}
 
-        function changeLanguage(lang) {
-            currentLang = lang;
-            const data = langData[lang];
-            const htmlTag = document.getElementById('htmlTag');
-            htmlTag.setAttribute('lang', lang);
-            htmlTag.setAttribute('dir', data.dir);
-            
-            if(data.dir === 'ltr') {
-                htmlTag.classList.remove('dir-rtl');
-                htmlTag.classList.add('dir-ltr');
-            } else {
-                htmlTag.classList.remove('dir-ltr');
-                htmlTag.classList.add('dir-rtl');
-            }
+/* ---------- Generate ---------- */
+async function generate(){
+let v=sub.value.trim(); if(!v) return;
+saveHistory(v);
 
-            document.getElementById('txt-title').childNodes[2].nodeValue = " " + data.title;
-            document.getElementById('txt-subtitle').innerText = data.subtitle;
-            document.getElementById('txt-telegram').innerText = data.telegram;
-            document.getElementById('tab-to-sub-text').innerText = data.tabToSub;
-            document.getElementById('tab-to-config-text').innerText = data.tabToConfig;
-            document.getElementById('lbl-input-configs').childNodes[2].nodeValue = " " + data.lblInputConfigs;
-            document.getElementById('stat-all').innerText = data.statAll;
-            document.getElementById('btn-generate').innerText = data.btnGenerate;
-            document.getElementById('lbl-output-dataurl').innerText = data.lblOutputDataurl;
-            document.getElementById('lbl-qr-title').childNodes[1].nodeValue = " " + data.lblQrTitle;
-            document.getElementById('lbl-qr-desc').innerText = data.lblQrDesc;
-            document.getElementById('lbl-input-sub').childNodes[2].nodeValue = " " + data.lblInputSub;
-            document.getElementById('btn-decode').innerText = data.btnDecode;
-            document.getElementById('lbl-output-configs').childNodes[1].nodeValue = " " + data.lblOutputConfigs;
-            document.getElementById('txt-footer-dev').innerText = data.footerDev;
-            document.getElementById('txt-footer-safety').innerText = data.footerSafety;
+if(v.startsWith("http")){
+let r=await fetch(v); v=await r.text();
+}
 
-            document.querySelectorAll('.btn-copy-txt').forEach(b => b.innerText = data.btnCopy);
-            document.querySelectorAll('.btn-copy-all-txt').forEach(b => b.childNodes[2].nodeValue = " " + data.btnCopyAll);
-            document.querySelectorAll('.btn-import-txt').forEach(b => b.innerText = data.btnImport);
+let lines=v.split(/\r?\n/).filter(Boolean);
+let res=[];
 
-            document.getElementById('lang-fa').className = lang === 'fa' ? "px-2.5 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 cursor-pointer" : "px-2.5 py-1.5 rounded-lg text-slate-400 cursor-pointer";
-            document.getElementById('lang-en').className = lang === 'en' ? "px-2.5 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 cursor-pointer" : "px-2.5 py-1.5 rounded-lg text-slate-400 cursor-pointer";
-        }
+lines.forEach(l=>{
+if(l.startsWith("vmess://")){
+let j=decodeVmess(l);
+if(j){
+res.push("### "+(j.ps||"VMESS"));
+res.push(JSON.stringify(j,null,2));
+}else res.push(l);
+}
+else if(isB64(l)){
+let d=dec(l); res.push(d||l)
+}else res.push(l)
+});
 
-        function switchTab(type) {
-            const btnSub = document.getElementById('tabToSubBtn');
-            const btnConf = document.getElementById('tabToConfigBtn');
-            const secSub = document.getElementById('sectionToSub');
-            const secConf = document.getElementById('sectionToConfig');
+allLines=res;
+render();
+}
 
-            if (type === 'toSub') {
-                btnSub.className = "bg-indigo-600/10 border border-indigo-500/40 text-white py-3 font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5";
-                btnConf.className = "py-3 font-bold rounded-xl border border-transparent text-slate-400 hover:text-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5";
-                secSub.classList.remove('hidden');
-                secConf.classList.add('hidden');
-            } else {
-                btnConf.className = "bg-indigo-600/10 border border-indigo-500/40 text-white py-3 font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5";
-                btnSub.className = "py-3 font-bold rounded-xl border border-transparent text-slate-400 hover:text-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5";
-                secConf.classList.remove('hidden');
-                secSub.classList.add('hidden');
-            }
-        }
+/* ---------- Render ---------- */
+function render(){
+let q=document.getElementById("search").value.toLowerCase();
+let f=allLines.filter(l=>{
+if(currentTab!=="all" && !l.startsWith(currentTab+"://")) return false;
+return l.toLowerCase().includes(q);
+});
+out.value=f.join("\n\n");
+count();
+}
 
-        function utoa(str) { return btoa(unescape(encodeURIComponent(str))); }
-        
-        // تابع رمزگشایی منعطف سراسری (حتی با کاراکترهای خاص)
-        function safeAtob(str) {
-            try {
-                return decodeURIComponent(escape(atob(str)));
-            } catch (e) {
-                try {
-                    return atob(str);
-                } catch (err) {
-                    // رمزگشایی به صورت باینری آرایه برای هندل کردن کاراکترهای عجیب مرزبان
-                    let binary = atob(str);
-                    let bytes = new Uint8Array(binary.length);
-                    for (let i = 0; i < binary.length; i++) {
-                        bytes[i] = binary.charCodeAt(i);
-                    }
-                    return new TextDecoder('utf-8').decode(bytes);
-                }
-            }
-        }
+/* ---------- Counter ---------- */
+function count(){
+let m={vmess:0,vless:0,trojan:0,ss:0};
+allLines.forEach(l=>{
+Object.keys(m).forEach(p=>l.startsWith(p+"://")&&m[p]++)
+});
+document.getElementById("cnt").textContent=
+`VMESS:${m.vmess} | VLESS:${m.vless} | Trojan:${m.trojan} | SS:${m.ss}`;
+}
 
-        function analyzeConfigs() {
-            const input = document.getElementById('configsInput').value.trim();
-            if(!input) { resetStats(); return; }
-            const lines = input.split('\n').map(l => l.trim().toLowerCase()).filter(l => l.length > 0);
-            let vless = 0, vmess = 0, trojan = 0, ss = 0;
-            lines.forEach(line => {
-                if(line.startsWith('vless://')) vless++;
-                else if(line.startsWith('vmess://')) vmess++;
-                else if(line.startsWith('trojan://')) trojan++;
-                else if(line.startsWith('ss://')) ss++;
-            });
-            document.getElementById('count-all').innerText = lines.length;
-            document.getElementById('count-vless').innerText = vless;
-            document.getElementById('count-vmess').innerText = vmess;
-            document.getElementById('count-trojan').innerText = trojan;
-            document.getElementById('count-ss').innerText = ss;
-        }
+/* ---------- Tabs ---------- */
+function setTab(t){currentTab=t;render()}
 
-        function resetStats() {
-            ['all', 'vless', 'vmess', 'trojan', 'ss'].forEach(id => document.getElementById(`count-${id}`).innerText = '0');
-        }
+/* ---------- Search ---------- */
+document.getElementById("search").oninput=render;
 
-        let generatedDataUrl = "";
-        function generateSubscription() {
-            const configsInput = document.getElementById('configsInput').value.trim();
-            if (!configsInput) {
-                showToast(langData[currentLang].msgEmptyConfig, 'error');
-                return;
-            }
+/* ---------- Export ---------- */
+function copyAll(){navigator.clipboard.writeText(out.value)}
+function downloadTXT(){dl(out.value,"configs.txt")}
+function downloadJSON(){dl(JSON.stringify(allLines,null,2),"configs.json")}
+function downloadClash(){
+let y="proxies:\n";
+allLines.filter(l=>l.startsWith("vmess://")).forEach((l,i)=>{
+y+=`- name: vmess-${i}\n  type: vmess\n`;
+});
+dl(y,"clash.yaml")
+}
+function dl(c,n){
+let a=document.createElement("a");
+a.href=URL.createObjectURL(new Blob([c]));
+a.download=n;a.click();
+}
 
-            const configsArray = configsInput.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            if (configsArray.length === 0) return;
-            const combinedConfigs = configsArray.join('\n');
+/* ---------- Theme ---------- */
+function toggleTheme(){
+let t=document.documentElement.getAttribute("data-theme");
+t=t==="light"?"dark":"light";
+document.documentElement.setAttribute("data-theme",t);
+localStorage.theme=t;
+}
+if(localStorage.theme)
+document.documentElement.setAttribute("data-theme",localStorage.theme);
 
-            try {
-                const base64Result = utoa(combinedConfigs);
-                generatedDataUrl = `data:text/plain;base64,${base64Result}`;
-                document.getElementById('subLinkOutput').value = generatedDataUrl;
+/* ---------- History ---------- */
+function saveHistory(v){
+let h=JSON.parse(localStorage.h||"[]");
+h.unshift(v); h=[...new Set(h)].slice(0,5);
+localStorage.h=JSON.stringify(h); loadHistory();
+}
+function loadHistory(){
+let h=JSON.parse(localStorage.h||"[]");
+let el=document.getElementById("history");
+el.innerHTML="";
+h.forEach(x=>{
+let d=document.createElement("div");
+d.textContent=x.slice(0,40);
+d.onclick=()=>{sub.value=x;generate()}
+el.appendChild(d);
+});
+}
+loadHistory();
 
-                const qrContainer = document.getElementById('qrcode');
-                qrContainer.innerHTML = ''; 
-                new QRCode(qrContainer, {
-                    text: generatedDataUrl,
-                    width: 110,
-                    height: 110,
-                    colorDark : "#020617",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.M
-                });
-
-                document.getElementById('outputToSub').classList.remove('hidden');
-                document.getElementById('outputToSub').scrollIntoView({ behavior: 'smooth' });
-                showToast(langData[currentLang].msgSuccessGen, 'success');
-            } catch (error) {
-                showToast('Error encoding configs data!', 'error');
-            }
-        }
-
-        function openApp(appType) {
-            if (!generatedDataUrl) return;
-            let targetUri = "";
-            const encodedUrl = encodeURIComponent(generatedDataUrl);
-
-            if (appType === 'v2rayng') {
-                targetUri = `v2rayng://install-config?url=${encodedUrl}`;
-            } else if (appType === 'hiddify') {
-                targetUri = `hiddify://import/${encodedUrl}`;
-            } else if (appType === 'happ') {
-                targetUri = `happ://settings/sub?url=${encodedUrl}`;
-            }
-
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = targetUri;
-            document.body.appendChild(iframe);
-            
-            setTimeout(() => {
-                document.body.removeChild(iframe);
-                window.location.href = targetUri;
-            }, 100);
-        }
-
-        // سیستم واکشی چند لایه و هوشمند برای حل ۱۰۰٪ مشکل دانلود و انکودینگ مرزبان و سنایی
-        async function decodeSubscription() {
-            let subInput = document.getElementById('subInput').value.trim();
-            if (!subInput) {
-                showToast(langData[currentLang].msgEmptySub, 'error');
-                return;
-            }
-
-            const btnTrigger = document.getElementById('btn-decode-trigger');
-            
-            // اگر ورودی یک URL معتبر باشد
-            if (subInput.startsWith('http://') || subInput.startsWith('https://')) {
-                btnTrigger.disabled = true;
-                showToast(langData[currentLang].msgLoading, 'info');
-                
-                let fetchedContent = null;
-                
-                // لایه ۱: تلاش برای دانلود مستقیم و بدون واسطه (برخی سرورها CORS آزاد دارند)
-                try {
-                    const directRes = await fetch(subInput);
-                    if (directRes.ok) {
-                        fetchedContent = await directRes.text();
-                    }
-                } catch (e) {
-                    // خطا داد؛ یعنی CORS روی مرورگر بسته است، عبور به لایه بعد
-                }
-
-                // لایه ۲: استفاده از آل‌اوریجینز (AllOrigins) در صورت ناموفق بودن لایه اول
-                if (!fetchedContent) {
-                    try {
-                        const proxyUrl1 = `https://api.allorigins.win/get?url=${encodeURIComponent(subInput)}`;
-                        const res1 = await fetch(proxyUrl1);
-                        if (res1.ok) {
-                            const json = await res1.json();
-                            fetchedContent = json.contents;
-                        }
-                    } catch (e) {}
-                }
-
-                // لایه ۳: پروکسی زاپاس و قدرتمند (Cors-Anywhere Alternative) برای تضمین پورت‌های ۲MD
-                if (!fetchedContent) {
-                    try {
-                        const proxyUrl2 = `https://corsproxy.io/?${encodeURIComponent(subInput)}`;
-                        const res2 = await fetch(proxyUrl2);
-                        if (res2.ok) {
-                            fetchedContent = await res2.text();
-                        }
-                    } catch (e) {}
-                }
-
-                // اگر هیچکدام کار نکرد
-                if (!fetchedContent) {
-                    btnTrigger.disabled = false;
-                    showToast(currentLang === 'fa' ? 'خطا در ارتباط با سرور لینک ساب! (احتمالاً دامنه/پورت سرور شما بلاک است)' : 'Failed to fetch sub link data!', 'error');
-                    return;
-                }
-
-                subInput = fetchedContent.trim();
-                btnTrigger.disabled = false;
-            }
-
-            // پاکسازی تگ‌ها و رشته‌های اضافی کلاینت‌ها
-            if (subInput.includes('base64,')) {
-                subInput = subInput.split('base64,')[1];
-            } else if (subInput.includes('url=')) {
-                subInput = decodeURIComponent(subInput.split('url=')[1]);
-                if (subInput.includes('base64,')) subInput = subInput.split('base64,')[1];
-            } else if (subInput.includes('import/')) {
-                subInput = decodeURIComponent(subInput.split('import/')[1]);
-                if (subInput.includes('base64,')) subInput = subInput.split('base64,')[1];
-            }
-
-            subInput = subInput.replace(/\s/g, '');
-
-            try {
-                // فیلتر نهایی بر اساس نوع خروجی (متن خام کانفیگ‌ها یا بیس۶۴ انکود شده)
-                let finalOutput = "";
-                if (subInput.includes('vless://') || subInput.includes('vmess://') || subInput.includes('trojan://') || subInput.includes('ss://')) {
-                    finalOutput = subInput;
-                } else {
-                    finalOutput = safeAtob(subInput);
-                }
-
-                // مرتب‌سازی خطوط خروجی برای زیباتر شدن کانفیگ‌ها
-                const formattedOutput = finalOutput.split('\n').map(l => l.trim()).filter(l => l.length > 0).join('\n');
-
-                document.getElementById('decodedConfigsOutput').value = formattedOutput;
-                document.getElementById('outputToConfig').classList.remove('hidden');
-                document.getElementById('outputToConfig').scrollIntoView({ behavior: 'smooth' });
-                showToast(langData[currentLang].msgSuccessDec, 'success');
-            } catch (error) {
-                showToast(langData[currentLang].msgErrorDec, 'error');
-            }
-        }
-
-        function copyToClipboard(inputId, button) {
-            const copyText = document.getElementById(inputId);
-            copyText.select();
-            navigator.clipboard.writeText(copyText.value).then(() => {
-                showToast(langData[currentLang].msgCopied, 'success');
-            });
-        }
-
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `flex items-center gap-2 p-3 rounded-xl shadow-2xl text-xs font-semibold border text-white transition-all duration-300 transform -translate-x-8 opacity-0 pointer-events-auto min-w-[220px]`;
-            
-            let icon = 'info';
-            if(type === 'success') {
-                toast.classList.add('bg-emerald-950/95', 'border-emerald-500/30', 'text-emerald-300');
-                icon = 'check-circle';
-            } else if(type === 'error') {
-                toast.classList.add('bg-rose-950/95', 'border-rose-500/30', 'text-rose-300');
-                icon = 'alert-triangle';
-            } else {
-                toast.classList.add('bg-slate-900/95', 'border-slate-700', 'text-indigo-300');
-                icon = 'info';
-            }
-            
-            toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 shrink-0"></i> <span>${message}</span>`;
-            container.appendChild(toast);
-            lucide.createIcons();
-            
-            setTimeout(() => { toast.classList.remove('-translate-x-8', 'opacity-0'); }, 15);
-            setTimeout(() => {
-                toast.classList.add('translate-x-8', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
-        }
-    </script>
+function clearAll(){sub.value="";out.value="";allLines=[]}
+</script>
 </body>
 </html>
