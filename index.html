@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SUB Config Decoder — GOD MODE</title>
+<title>SUB Config Decoder — Stable</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -25,10 +25,8 @@ border:var(--border);padding:12px
 textarea{width:100%;height:380px;font-family:monospace}
 button{cursor:pointer;background:var(--accent);border:none;font-weight:600}
 button.ghost{background:transparent;border:var(--border)}
-.tabs button{flex:1}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .small{font-size:13px;color:var(--muted)}
-.counter span{margin-right:10px}
 .history div{cursor:pointer;padding:6px;border-radius:6px}
 .history div:hover{background:#ffffff10}
 @media(max-width:900px){
@@ -38,12 +36,13 @@ button.ghost{background:transparent;border:var(--border)}
 </head>
 
 <body>
+
 <div class="container">
 
 <!-- LEFT -->
 <div class="card">
-<h2>🚀 SUB Config Decoder — God Mode</h2>
-<p class="small">Paste subscription URL / config / Base64</p>
+<h2>🚀 SUB Decoder (Stable Version)</h2>
+<p class="small">Paste subscription link / Base64 / config</p>
 
 <div class="row">
 <input id="sub" placeholder="https://example.com/sub.txt or vmess://..." style="flex:1">
@@ -52,45 +51,32 @@ button.ghost{background:transparent;border:var(--border)}
 
 <div class="row" style="margin-top:8px">
 <button class="ghost" onclick="copyAll()">📋 Copy</button>
-<button class="ghost" onclick="downloadTXT()">💾 TXT</button>
-<button class="ghost" onclick="downloadJSON()">📦 JSON</button>
-<button class="ghost" onclick="downloadClash()">🧩 Clash</button>
-<button class="ghost" onclick="clearAll()">🗑️ Clear</button>
+<button class="ghost" onclick="downloadTXT()">TXT</button>
+<button class="ghost" onclick="downloadJSON()">JSON</button>
+<button class="ghost" onclick="clearAll()">Clear</button>
 </div>
 
-<div class="row tabs" style="margin-top:12px">
-<button onclick="setTab('all')">All</button>
-<button onclick="setTab('vmess')">VMESS</button>
-<button onclick="setTab('vless')">VLESS</button>
-<button onclick="setTab('trojan')">Trojan</button>
-<button onclick="setTab('ss')">SS</button>
-</div>
-
-<input id="search" placeholder="🔍 Live search..." style="margin-top:10px;width:100%">
+<input id="search" placeholder="Search..." style="margin-top:10px;width:100%">
 
 <textarea id="output" readonly></textarea>
 
-<div class="row counter small">
-<span id="cnt"></span>
-</div>
+<p class="small" id="cnt"></p>
 </div>
 
 <!-- RIGHT -->
 <div class="card">
-<div class="row">
-<strong>⚙ Utilities</strong>
-<button class="ghost" onclick="toggleTheme()">🌙 / ☀️</button>
-</div>
+
+<h4>⚙ Settings</h4>
+<button class="ghost" onclick="toggleTheme()">Theme</button>
 
 <h4>🕘 History</h4>
 <div class="history small" id="history"></div>
 
 <h4>ℹ Info</h4>
 <ul class="small">
-<li>Auto Decode Base64</li>
-<li>VMESS → JSON</li>
-<li>Live Filter</li>
-<li>LocalStorage History</li>
+<li>Base64 Auto Decode</li>
+<li>VMESS Parse Fix</li>
+<li>Safe Render Engine</li>
 </ul>
 
 <hr style="border:var(--border);margin:10px 0">
@@ -98,7 +84,7 @@ button.ghost{background:transparent;border:var(--border)}
 <div class="small">
 <p><strong>👨‍💻 Creator:</strong> xsparvin</p>
 <p>
-📢 Telegram Channel:<br>
+📢 Telegram:<br>
 <a href="https://t.me/xsfilterrnet" target="_blank" style="color:var(--accent);text-decoration:none">
 https://t.me/xsfilterrnet
 </a>
@@ -112,91 +98,103 @@ https://t.me/xsfilterrnet
 <script>
 const out=document.getElementById("output");
 const sub=document.getElementById("sub");
-let allLines=[],currentTab="all";
+let all=[];
 
-/* ---------- Base64 ---------- */
-const isB64=s=>{try{return btoa(atob(s.replace(/\s+/g,'')))===s.replace(/\s+/g,'')}catch{return false}}
-const dec=s=>{try{return atob(s)}catch{return null}}
-
-/* ---------- VMESS ---------- */
-function decodeVmess(l){
+/* ---------- Base64 safe ---------- */
+function decodeB64(str){
 try{
-let j=JSON.parse(atob(l.replace("vmess://","")));
-return j
+str=str.trim()
+.replace(/-/g,'+')
+.replace(/_/g,'/');
+
+while(str.length % 4) str+='=';
+
+return decodeURIComponent(atob(str).split('').map(c=>
+'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)
+).join(''));
 }catch{return null}
 }
 
-/* ---------- Generate ---------- */
+/* ---------- VMESS ---------- */
+function decodeVmess(str){
+try{
+let raw=str.replace("vmess://","");
+let d=decodeB64(raw);
+return d?JSON.parse(d):null;
+}catch{return null}
+}
+
+/* ---------- Main ---------- */
 async function generate(){
-let v=sub.value.trim(); if(!v) return;
+let v=sub.value.trim();
+if(!v) return;
+
 saveHistory(v);
 
 if(v.startsWith("http")){
-let r=await fetch(v); v=await r.text();
+try{
+let r=await fetch(v);
+v=await r.text();
+}catch{
+alert("Fetch failed (CORS or invalid link)");
+return;
+}
 }
 
 let lines=v.split(/\r?\n/).filter(Boolean);
 let res=[];
 
 lines.forEach(l=>{
+
 if(l.startsWith("vmess://")){
 let j=decodeVmess(l);
-if(j){
-res.push("### "+(j.ps||"VMESS"));
-res.push(JSON.stringify(j,null,2));
-}else res.push(l);
+if(j) res.push(JSON.stringify(j,null,2));
+else res.push(l);
 }
-else if(isB64(l)){
-let d=dec(l); res.push(d||l)
-}else res.push(l)
+
+else{
+let d=decodeB64(l);
+res.push(d || l);
+}
+
 });
 
-allLines=res;
+all=res;
 render();
 }
 
 /* ---------- Render ---------- */
 function render(){
 let q=document.getElementById("search").value.toLowerCase();
-let f=allLines.filter(l=>{
-if(currentTab!=="all" && !l.startsWith(currentTab+"://")) return false;
-return l.toLowerCase().includes(q);
-});
+
+let f=all.filter(x=>x.toLowerCase().includes(q));
+
 out.value=f.join("\n\n");
-count();
-}
 
-/* ---------- Counter ---------- */
-function count(){
-let m={vmess:0,vless:0,trojan:0,ss:0};
-allLines.forEach(l=>{
-Object.keys(m).forEach(p=>l.startsWith(p+"://")&&m[p]++)
-});
 document.getElementById("cnt").textContent=
-`VMESS:${m.vmess} | VLESS:${m.vless} | Trojan:${m.trojan} | SS:${m.ss}`;
+`Total Lines: ${all.length}`;
 }
 
-/* ---------- Tabs ---------- */
-function setTab(t){currentTab=t;render()}
-
-/* ---------- Search ---------- */
 document.getElementById("search").oninput=render;
 
 /* ---------- Export ---------- */
-function copyAll(){navigator.clipboard.writeText(out.value)}
-function downloadTXT(){dl(out.value,"configs.txt")}
-function downloadJSON(){dl(JSON.stringify(allLines,null,2),"configs.json")}
-function downloadClash(){
-let y="proxies:\n";
-allLines.filter(l=>l.startsWith("vmess://")).forEach((l,i)=>{
-y+=`- name: vmess-${i}\n  type: vmess\n`;
-});
-dl(y,"clash.yaml")
+function copyAll(){
+navigator.clipboard.writeText(out.value);
 }
+
+function downloadTXT(){
+dl(out.value,"configs.txt");
+}
+
+function downloadJSON(){
+dl(JSON.stringify(all,null,2),"configs.json");
+}
+
 function dl(c,n){
 let a=document.createElement("a");
 a.href=URL.createObjectURL(new Blob([c]));
-a.download=n;a.click();
+a.download=n;
+a.click();
 }
 
 /* ---------- Theme ---------- */
@@ -206,15 +204,19 @@ t=t==="light"?"dark":"light";
 document.documentElement.setAttribute("data-theme",t);
 localStorage.theme=t;
 }
+
 if(localStorage.theme)
 document.documentElement.setAttribute("data-theme",localStorage.theme);
 
 /* ---------- History ---------- */
 function saveHistory(v){
 let h=JSON.parse(localStorage.h||"[]");
-h.unshift(v); h=[...new Set(h)].slice(0,5);
-localStorage.h=JSON.stringify(h); loadHistory();
+h.unshift(v);
+h=[...new Set(h)].slice(0,5);
+localStorage.h=JSON.stringify(h);
+loadHistory();
 }
+
 function loadHistory(){
 let h=JSON.parse(localStorage.h||"[]");
 let el=document.getElementById("history");
@@ -228,7 +230,14 @@ el.appendChild(d);
 }
 loadHistory();
 
-function clearAll(){sub.value="";out.value="";allLines=[]}
+/* ---------- Clear ---------- */
+function clearAll(){
+sub.value="";
+out.value="";
+all=[];
+document.getElementById("cnt").textContent="";
+}
 </script>
+
 </body>
 </html>
